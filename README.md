@@ -6,26 +6,14 @@ Developed for **INTE 22283: Mobile Applications Development**.
 
 ---
 
-## 📌 Problem Statement & Solution
+## 📌 1. Problem Statement & Solution
 
 - **Problem:** Everyday sounds (doorbells, smoke alarms, baby crying, phone ringing, door knocking) carry safety and social importance, but are missed by individuals with hearing impairments or those using noise-canceling headphones.
 - **Solution:** EchoAlert continuously processes microphone audio via a background/foreground service using an on-device audio classification model. When target sounds exceed confidence thresholds, immediate visual and haptic alerts are triggered, and events are saved to local history.
 
 ---
 
-## 🚀 Key Features
-
-| Screen / Feature | Description |
-| :--- | :--- |
-| **Home Screen** | Quick toggle for starting/stopping listening service, system status, and recent activity preview. |
-| **Live Detection** | Real-time waveform / audio meter, current sound classification confidence level, and live indicator. |
-| **History Log** | Chronological log of detected sounds with timestamps, audio category tags, filter, and search. |
-| **Settings** | Configure monitored sound categories (doorbell, alarm, baby cry, ring, knock), sensitivity thresholds, alert preferences. |
-| **Alert Overlay & Haptics** | High-priority pop-up overlay and distinct vibration pattern per sound category. |
-
----
-
-## 🎯 Target Sound Categories
+## 🎯 2. Target Sound Categories
 
 1. 🔔 **Doorbell**
 2. 🚨 **Smoke / Fire Alarm**
@@ -35,27 +23,49 @@ Developed for **INTE 22283: Mobile Applications Development**.
 
 ---
 
-## 🏗️ System Architecture & Tech Stack
+## 🏗️ 3. System Architecture & Tech Stack
 
-- **Framework:** Flutter (Dart) - Cross-Platform (Android & iOS)
-- **State Management:** Provider / Riverpod / BLoC (MVVM Pattern)
-- **ML / Audio Engine:** TensorFlow Lite (`tflite_flutter`) with YAMNet pre-trained audio classification model
-- **Audio Capture:** `record` / `flutter_sound` / `audio_streamer`
-- **Background Engine:** `flutter_background_service` (Foreground service with notification banner)
-- **Local Storage:** `sqflite` / `hive` / `isar` for persistent event history & user settings
-- **Alerts & Haptics:** `flutter_local_notifications` & `vibration`
+- **Programming Language / Framework:** Flutter (Dart) — Cross-Platform
+- **Sound Classification:** TensorFlow Lite (`tflite_flutter`) — Pre-trained YAMNet Model
+- **Audio Capture & Background Service:** `flutter_background_service`, `record` / `audio_streamer`
+- **Local Database:** SQLite (`sqflite`) / Hive matching Room DB Entity Specs
+- **Alerts & Haptics:** `flutter_local_notifications` (High-priority channel) & `vibration`
+- **UI Framework:** Flutter Material Design 3 Components
 
 ---
 
-## 👥 5-Member Team Workload Breakdown
+## 💾 4. Database Design
 
-| Team Member | Module Focus & Responsibilities |
+The local database contains two primary tables:
+
+### 4.1 `DetectionEvent` Table
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `Integer` (PK, autoincrement) | Unique identifier for the detection event. |
+| `soundLabel` | `String` | Name of the detected sound (e.g., "Doorbell"). |
+| `confidence` | `Float` | Model confidence score for the detection (0.0 to 1.0). |
+| `timestamp` | `Integer / Long` | Unix timestamp of the detection event. |
+
+### 4.2 `SoundSetting` Table
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `soundLabel` | `String` (PK) | Name of the sound category (e.g., "Smoke Alarm"). |
+| `isEnabled` | `Boolean` | Whether this sound category is actively monitored. |
+| `sensitivity` | `Float` | Confidence threshold required to trigger an alert. |
+
+---
+
+## 👥 5. Group Task Allocation
+
+| Team Member | Module Focus & Responsibility |
 | :--- | :--- |
-| **Member 1 (Lead / Audio & Service)** | Foreground service setup, real-time microphone audio stream capturing (`flutter_background_service`, `record`). |
-| **Member 2 (ML / Sound Classification)** | TensorFlow Lite Integration, YAMNet model loading, audio processing/tensor conversion, confidence thresholding. |
-| **Member 3 (UI / Presentation Layer)** | Core 5 UI screens (Home, Live Detection, History Log, Settings, Alert Overlay), theme & accessibility. |
-| **Member 4 (Data & Persistence)** | Local database setup (`sqflite`), storage repository for detection logs, settings persistence (`shared_preferences`). |
-| **Member 5 (Alerts, Permissions & Testing)** | Notification manager (`flutter_local_notifications`), vibration patterns, runtime permission handling, integration testing. |
+| **Member A** | **UI/UX Design & Navigation:** Home, Live Detection, Settings, & History screens. |
+| **Member B** | **Audio Capture & Foreground Service:** Microphone PCM stream & background listener service. |
+| **Member C** | **TensorFlow Lite & Detection Logic:** YAMNet model integration, audio tensor processing & scoring. |
+| **Member D** | **Database, Alert Overlay & Notifications:** SQLite persistence, vibration haptics & high-priority alerts. |
+| **Member E** | **Testing, Documentation & Integration:** E2E testing, pipeline integration, demo prep & user guides. |
+
+*(Detailed AI Developer Prompts for each team member are available in [TEAM_TASK_PROMPTS.md](file:///c:/Users/User/AndroidStudioProjects/EchoAlertAppCrossPlatform/TEAM_TASK_PROMPTS.md))*
 
 ---
 
@@ -65,7 +75,7 @@ Developed for **INTE 22283: Mobile Applications Development**.
 
 - Flutter SDK (v3.x+)
 - Android Studio / VS Code
-- Android Device (API Level 24+) or iOS Device/Simulator
+- Android / iOS Device or Simulator
 
 ### Installation
 
