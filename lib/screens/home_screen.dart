@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/audio_service.dart';
 import 'alert_overlay.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -31,18 +32,29 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     super.dispose();
   }
 
-  void _toggleListening() {
-    setState(() {
-      _isListening = !_isListening;
-      if (_isListening) {
-        _pulseController.repeat(reverse: true);
-        // TODO: Start background audio service here
+  Future<void> _toggleListening() async {
+    if (!_isListening) {
+      bool success = await AudioService().startListening();
+      if (success) {
+        setState(() {
+          _isListening = true;
+          _pulseController.repeat(reverse: true);
+        });
       } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to access microphone or start listening service')),
+          );
+        }
+      }
+    } else {
+      await AudioService().stopListening();
+      setState(() {
+        _isListening = false;
         _pulseController.stop();
         _pulseController.reset();
-        // TODO: Stop background audio service here
-      }
-    });
+      });
+    }
   }
 
   // A mock method to show how an alert might be triggered
