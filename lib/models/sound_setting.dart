@@ -1,10 +1,12 @@
 
+// C ගේ engine එකේ tuned thresholds වලට ගැලපෙන default values
 const Map<String, double> kDefaultSounds = {
-  'Doorbell': 0.85,
-  'Smoke / Fire Alarm': 0.90,
-  'Baby crying': 0.80,
-  'Phone ringing': 0.85,
-  'Door knocking': 0.75,
+  'Doorbell': 0.63,
+  'Smoke / Fire Alarm': 0.65,
+  'Baby crying': 0.62,
+  'Phone ringing': 0.63,
+  'Door knocking': 0.60,
+
 };
 
 class SoundSetting {

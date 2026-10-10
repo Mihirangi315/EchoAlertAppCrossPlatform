@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/settings_screen.dart';
+import 'services/alert_manager.dart';
+import 'services/detection_bridge.dart';
 import 'theme/app_theme.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AlertManager.instance.init();
+  await DetectionBridge.instance.start();
   runApp(const EchoAlertApp());
 }
 
