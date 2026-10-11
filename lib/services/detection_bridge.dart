@@ -24,6 +24,8 @@ class DetectionBridge {
   StreamSubscription<DetectionResult>? _subscription;
 
   Future<void> start() async {
+    // Web එකේ database නැහැ
+    if (kIsWeb) return;
     await syncSettings();
     _subscription ??= SoundClassificationEngine().detectionStream.listen(
       (detection) async {
@@ -40,6 +42,7 @@ class DetectionBridge {
   /// Database settings (enable/sensitivity) engine එකට යවනවා.
   /// Settings screen එකෙන් වෙනසක් කළාම මේක ආයෙ call කරන්න.
   Future<void> syncSettings() async {
+    if (kIsWeb) return;
     final engine = SoundClassificationEngine();
     final settings = await AppDatabase.instance.getSettings();
     for (final s in settings) {

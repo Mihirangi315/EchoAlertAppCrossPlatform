@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:vibration/vibration.dart';
@@ -45,7 +46,8 @@ class AlertManager {
   }
 
   Future<void> init() async {
-    if (_initialized) return;
+    // Web එකේ database/notification/vibration නැහැ
+    if (_initialized || kIsWeb) return;
     await _plugin.initialize(
       settings: const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
@@ -61,6 +63,8 @@ class AlertManager {
 
   /// Member C ගේ detection එකෙන් මේක call කරන්න ඕන
   Future<void> handleDetection(String label, double confidence) async {
+    if (kIsWeb) return;
+
     final settings = await AppDatabase.instance.getSettings();
     final matches =
         settings.where((s) => _normalize(s.soundLabel) == _normalize(label));
@@ -87,7 +91,10 @@ class AlertManager {
   }
 
   /// Settings screen එකේ "Test" button වලට (database/cooldown නැතුව)
-  Future<void> showTestAlert(String label) => _fireAlert(label, 0.99);
+  Future<void> showTestAlert(String label) async {
+    if (kIsWeb) return;
+    await _fireAlert(label, 0.99);
+  }
 
   Future<void> _fireAlert(String label, double confidence) async {
     await _vibrate(label);
