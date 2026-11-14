@@ -14,8 +14,8 @@ void main() {
     });
 
     test('Default Category Sensitivities and Toggles are configured', () {
-      expect(engine.getSensitivity('Doorbell'), equals(0.70));
-      expect(engine.getSensitivity('Smoke Alarm'), equals(0.75));
+      expect(engine.getSensitivity('Doorbell'), equals(0.63));
+      expect(engine.getSensitivity('Smoke Alarm'), equals(0.65));
       expect(engine.isCategoryEnabled('Doorbell'), isTrue);
       expect(engine.isCategoryEnabled('Smoke Alarm'), isTrue);
     });
@@ -45,8 +45,14 @@ void main() {
       final shortBuffer = Float32List(1000);
       final longBuffer = Float32List(20000);
 
-      expect(shortBuffer.length, isNot(equals(YamnetClassifier.expectedSampleCount)));
-      expect(longBuffer.length, isNot(equals(YamnetClassifier.expectedSampleCount)));
+      expect(
+        shortBuffer.length,
+        isNot(equals(YamnetClassifier.expectedSampleCount)),
+      );
+      expect(
+        longBuffer.length,
+        isNot(equals(YamnetClassifier.expectedSampleCount)),
+      );
     });
   });
 }

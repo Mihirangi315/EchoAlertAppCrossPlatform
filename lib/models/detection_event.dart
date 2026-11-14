@@ -12,16 +12,16 @@ class DetectionEvent {
   });
 
   Map<String, dynamic> toMap() => {
-        if (id != null) 'id': id,
-        'soundLabel': soundLabel,
-        'confidence': confidence,
-        'timestamp': timestamp.millisecondsSinceEpoch,
-      };
+    if (id != null) 'id': id,
+    'soundLabel': soundLabel,
+    'confidence': confidence,
+    'timestamp': timestamp.millisecondsSinceEpoch,
+  };
 
   factory DetectionEvent.fromMap(Map<String, dynamic> map) => DetectionEvent(
-        id: map['id'] as int?,
-        soundLabel: map['soundLabel'] as String,
-        confidence: (map['confidence'] as num).toDouble(),
-        timestamp: DateTime.fromMillisecondsSinceEpoch(map['timestamp'] as int),
-      );
+    id: map['id'] as int?,
+    soundLabel: map['soundLabel'] as String,
+    confidence: (map['confidence'] as num).toDouble(),
+    timestamp: DateTime.fromMillisecondsSinceEpoch(map['timestamp'] as int),
+  );
 }

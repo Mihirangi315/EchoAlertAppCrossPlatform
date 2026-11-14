@@ -54,8 +54,10 @@ class AlertManager {
       ),
       onDidReceiveNotificationResponse: _onNotificationTap,
     );
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await android?.createNotificationChannel(_channel);
     await android?.requestNotificationsPermission();
     _initialized = true;
@@ -66,8 +68,9 @@ class AlertManager {
     if (kIsWeb) return;
 
     final settings = await AppDatabase.instance.getSettings();
-    final matches =
-        settings.where((s) => _normalize(s.soundLabel) == _normalize(label));
+    final matches = settings.where(
+      (s) => _normalize(s.soundLabel) == _normalize(label),
+    );
     if (matches.isEmpty) return;
     final setting = matches.first;
 
@@ -83,11 +86,13 @@ class AlertManager {
     _lastAlert[setting.soundLabel] = now;
 
     await _fireAlert(setting.soundLabel, confidence);
-    await AppDatabase.instance.insertEvent(DetectionEvent(
-      soundLabel: setting.soundLabel,
-      confidence: confidence,
-      timestamp: now,
-    ));
+    await AppDatabase.instance.insertEvent(
+      DetectionEvent(
+        soundLabel: setting.soundLabel,
+        confidence: confidence,
+        timestamp: now,
+      ),
+    );
   }
 
   /// Settings screen එකේ "Test" button වලට (database/cooldown නැතුව)
@@ -151,7 +156,9 @@ class AlertManager {
   void _onNotificationTap(NotificationResponse response) {
     final parts = (response.payload ?? '').split('|');
     if (parts.first.isEmpty) return;
-    final confidence = parts.length > 1 ? double.tryParse(parts[1]) ?? 0.0 : 0.0;
+    final confidence = parts.length > 1
+        ? double.tryParse(parts[1]) ?? 0.0
+        : 0.0;
     _showOverlay(parts.first, confidence);
   }
 }

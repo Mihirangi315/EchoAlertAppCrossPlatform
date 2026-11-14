@@ -5,10 +5,10 @@ class AlertOverlay extends StatelessWidget {
   final double confidence;
 
   const AlertOverlay({
-    Key? key,
+    super.key,
     required this.detectedSound,
     required this.confidence,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,10 +20,7 @@ class AlertOverlay extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutBack,
         builder: (context, value, child) {
-          return Transform.scale(
-            scale: value,
-            child: child,
-          );
+          return Transform.scale(scale: value, child: child);
         },
         child: Container(
           padding: const EdgeInsets.all(24),
@@ -50,17 +47,17 @@ class AlertOverlay extends StatelessWidget {
               Text(
                 'ALERT',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onErrorContainer,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: Theme.of(context).colorScheme.onErrorContainer,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 detectedSound,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onErrorContainer,
-                    ),
+                  color: Theme.of(context).colorScheme.onErrorContainer,
+                ),
               ),
               const SizedBox(height: 24),
               ElevatedButton(

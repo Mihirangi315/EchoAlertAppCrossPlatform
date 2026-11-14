@@ -37,8 +37,10 @@ class AppDatabase {
         for (final entry in kDefaultSounds.entries) {
           await db.insert(
             'SoundSetting',
-            SoundSetting(soundLabel: entry.key, sensitivity: entry.value)
-                .toMap(),
+            SoundSetting(
+              soundLabel: entry.key,
+              sensitivity: entry.value,
+            ).toMap(),
           );
         }
       },

@@ -1,7 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
 import '../services/audio_service.dart';
 import '../services/sound_classification_engine.dart';
 import '../services/permission_manager.dart';
+import '../database/app_database.dart';
 import '../models/detection_result.dart';
 import 'alert_overlay.dart';
 
@@ -12,11 +15,14 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   bool _isListening = false;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   DetectionResult? _lastDetectedEvent;
+  int _todayAlertsCount = 0;
+  int _activeCategoriesCount = 5;
 
   @override
   void initState() {
@@ -29,15 +35,43 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
+    _loadStats();
+
     // Listen to real-time ML detection stream
     SoundClassificationEngine().detectionStream.listen((detection) {
       if (mounted) {
         setState(() {
           _lastDetectedEvent = detection;
+          _todayAlertsCount++;
         });
         _triggerAlertOverlay(detection.category, detection.confidence);
       }
     });
+  }
+
+  Future<void> _loadStats() async {
+    if (kIsWeb) return;
+    try {
+      final events = await AppDatabase.instance.getEvents();
+      final now = DateTime.now();
+      final todayCount = events.where((e) {
+        return e.timestamp.year == now.year &&
+            e.timestamp.month == now.month &&
+            e.timestamp.day == now.day;
+      }).length;
+
+      final settings = await AppDatabase.instance.getSettings();
+      final activeCount = settings.where((s) => s.isEnabled).length;
+
+      if (mounted) {
+        setState(() {
+          _todayAlertsCount = todayCount;
+          _activeCategoriesCount = activeCount;
+        });
+      }
+    } catch (e) {
+      debugPrint('HomeScreen: Error loading stats: $e');
+    }
   }
 
   @override
@@ -48,11 +82,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Future<void> _toggleListening() async {
     if (!_isListening) {
-      // ✅ FIX 1: Request microphone permission BEFORE starting audio
-      final permissionGranted = await PermissionManager.requestAudioPermissions();
+      // 1. Check & request microphone permission with graceful rationale dialog
+      final permissionGranted =
+          await PermissionManager.requestAudioPermissions();
       if (!permissionGranted) {
         if (mounted) {
-          _showPermissionDeniedDialog();
+          await PermissionManager.showMicrophoneRationaleDialog(
+            context,
+            onRetry: _toggleListening,
+          );
         }
         return;
       }
@@ -69,7 +107,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Failed to access microphone. Please allow microphone permission.'),
+              content: Text(
+                'Failed to access microphone. Please check system permissions.',
+              ),
               backgroundColor: Colors.redAccent,
             ),
           );
@@ -86,41 +126,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     }
   }
 
-  /// Show dialog when microphone permission is denied
-  void _showPermissionDeniedDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.mic_off, color: Colors.redAccent),
-            SizedBox(width: 8),
-            Text('Microphone Permission Required'),
-          ],
-        ),
-        content: const Text(
-          'EchoAlert needs microphone access to detect sounds.\n\n'
-          'Please grant microphone permission in your device settings.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await PermissionManager.openAppSettings();
-            },
-            child: const Text('Open Settings'),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _simulateDetection() {
-    // ✅ FIX 2: Use correct category name matching engine's category map
     SoundClassificationEngine().simulateDetection(
       'Smoke Alarm',
       'Smoke detector, smoke alarm',
@@ -132,10 +138,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertOverlay(
-        detectedSound: soundCategory,
-        confidence: confidence,
-      ),
+      builder: (context) =>
+          AlertOverlay(detectedSound: soundCategory, confidence: confidence),
     );
   }
 
@@ -149,91 +153,191 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         actions: [
           if (_isListening)
             Padding(
-              padding: const EdgeInsets.only(right: 8.0),
+              padding: const EdgeInsets.only(right: 12.0),
               child: Chip(
-                avatar: const Icon(Icons.fiber_manual_record, color: Colors.redAccent, size: 14),
-                label: const Text('LIVE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                avatar: const Icon(
+                  Icons.fiber_manual_record,
+                  color: Colors.redAccent,
+                  size: 14,
+                ),
+                label: const Text(
+                  'LISTENING',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
                 backgroundColor: Colors.redAccent.withOpacity(0.15),
               ),
             ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Status text
-            Text(
-              _isListening ? 'Listening for sounds...' : 'Tap to start listening',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: _isListening ? theme.colorScheme.primary : Colors.grey,
-              ),
-            ),
-            if (_lastDetectedEvent != null) ...[
-              const SizedBox(height: 12),
-              Chip(
-                avatar: const Icon(Icons.graphic_eq, size: 18),
-                label: Text(
-                  'Last: ${_lastDetectedEvent!.category} (${(_lastDetectedEvent!.confidence * 100).toStringAsFixed(0)}%)',
-                  style: theme.textTheme.bodyMedium,
-                ),
-                backgroundColor: theme.colorScheme.primaryContainer,
-              ),
-            ],
-            const SizedBox(height: 40),
-
-            // Main listening toggle button
-            GestureDetector(
-              onTap: _toggleListening,
-              child: AnimatedBuilder(
-                animation: _pulseAnimation,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _isListening ? _pulseAnimation.value : 1.0,
-                    child: Container(
-                      width: 200,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _isListening
-                            ? theme.colorScheme.primaryContainer
-                            : theme.colorScheme.surfaceVariant,
-                        boxShadow: [
-                          if (_isListening)
-                            BoxShadow(
-                              color: theme.colorScheme.primary.withOpacity(0.3),
-                              blurRadius: 20,
-                              spreadRadius: 10,
-                            ),
-                        ],
-                      ),
-                      child: Icon(
-                        _isListening ? Icons.hearing : Icons.mic_off,
-                        size: 80,
-                        color: _isListening
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurfaceVariant,
-                      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Quick Stats Row (Member A requirement)
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      theme,
+                      title: 'Alerts Today',
+                      value: '$_todayAlertsCount',
+                      icon: Icons.notifications_active_outlined,
+                      color: Colors.blueAccent,
                     ),
-                  );
-                },
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      theme,
+                      title: 'Monitored Sounds',
+                      value: '$_activeCategoriesCount of 5',
+                      icon: Icons.check_circle_outline,
+                      color: Colors.teal,
+                    ),
+                  ),
+                ],
               ),
-            ),
 
-            const SizedBox(height: 60),
+              const SizedBox(height: 36),
 
-            // Simulation button for testing
-            if (_isListening)
-              ElevatedButton.icon(
-                onPressed: _simulateDetection,
-                icon: const Icon(Icons.warning_amber_rounded),
-                label: const Text('Simulate Detection'),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.onError,
-                  backgroundColor: theme.colorScheme.error,
+              // Status text
+              Text(
+                _isListening
+                    ? 'EchoAlert is Actively Listening'
+                    : 'Listening is Stopped',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: _isListening
+                      ? theme.colorScheme.primary
+                      : Colors.grey.shade600,
                 ),
               ),
+              const SizedBox(height: 8),
+              Text(
+                _isListening
+                    ? 'Monitoring ambient audio for safety & critical sounds'
+                    : 'Tap the button below to start background listening',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+
+              if (_lastDetectedEvent != null) ...[
+                const SizedBox(height: 16),
+                Chip(
+                  avatar: const Icon(Icons.graphic_eq, size: 18),
+                  label: Text(
+                    'Last Detected: ${_lastDetectedEvent!.category} (${(_lastDetectedEvent!.confidence * 100).toStringAsFixed(0)}%)',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  backgroundColor: theme.colorScheme.primaryContainer,
+                ),
+              ],
+
+              const SizedBox(height: 36),
+
+              // Hero listening toggle button
+              GestureDetector(
+                onTap: _toggleListening,
+                child: AnimatedBuilder(
+                  animation: _pulseAnimation,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: _isListening ? _pulseAnimation.value : 1.0,
+                      child: Container(
+                        width: 190,
+                        height: 190,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _isListening
+                              ? theme.colorScheme.primaryContainer
+                              : theme.colorScheme.surfaceVariant,
+                          boxShadow: [
+                            if (_isListening)
+                              BoxShadow(
+                                color: theme.colorScheme.primary.withOpacity(
+                                  0.35,
+                                ),
+                                blurRadius: 28,
+                                spreadRadius: 10,
+                              ),
+                          ],
+                        ),
+                        child: Icon(
+                          _isListening ? Icons.hearing : Icons.mic_off,
+                          size: 78,
+                          color: _isListening
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              // Simulation button for testing
+              if (_isListening)
+                ElevatedButton.icon(
+                  onPressed: _simulateDetection,
+                  icon: const Icon(Icons.warning_amber_rounded),
+                  label: const Text('Simulate Test Alert'),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: theme.colorScheme.onError,
+                    backgroundColor: theme.colorScheme.error,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard(
+    ThemeData theme, {
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 20, color: color),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
           ],
         ),
       ),

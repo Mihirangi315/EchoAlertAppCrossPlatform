@@ -27,16 +27,18 @@ class DetectionBridge {
     // Web එකේ database නැහැ
     if (kIsWeb) return;
     await syncSettings();
-    _subscription ??= SoundClassificationEngine().detectionStream.listen(
-      (detection) async {
-        try {
-          await AlertManager.instance
-              .handleDetection(detection.category, detection.confidence);
-        } catch (e) {
-          debugPrint('DetectionBridge error: $e');
-        }
-      },
-    );
+    _subscription ??= SoundClassificationEngine().detectionStream.listen((
+      detection,
+    ) async {
+      try {
+        await AlertManager.instance.handleDetection(
+          detection.category,
+          detection.confidence,
+        );
+      } catch (e) {
+        debugPrint('DetectionBridge error: $e');
+      }
+    });
   }
 
   /// Database settings (enable/sensitivity) engine එකට යවනවා.

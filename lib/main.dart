@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import 'screens/home_screen.dart';
+import 'screens/live_detection_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/settings_screen.dart';
 import 'services/alert_manager.dart';
@@ -14,12 +16,13 @@ Future<void> main() async {
 }
 
 class EchoAlertApp extends StatelessWidget {
-  const EchoAlertApp({Key? key}) : super(key: key);
+  const EchoAlertApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'EchoAlert',
+      navigatorKey: AlertManager.navigatorKey, // Critical integration: enables alert dialog overlay from background
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
@@ -30,7 +33,7 @@ class EchoAlertApp extends StatelessWidget {
 }
 
 class MainLayout extends StatefulWidget {
-  const MainLayout({Key? key}) : super(key: key);
+  const MainLayout({super.key});
 
   @override
   State<MainLayout> createState() => _MainLayoutState();
@@ -39,16 +42,17 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const HistoryScreen(),
-    const SettingsScreen(),
+  final List<Widget> _screens = const [
+    HomeScreen(),
+    LiveDetectionScreen(),
+    HistoryScreen(),
+    SettingsScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {
@@ -61,6 +65,11 @@ class _MainLayoutState extends State<MainLayout> {
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
             label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.graphic_eq_outlined),
+            selectedIcon: Icon(Icons.graphic_eq),
+            label: 'Live',
           ),
           NavigationDestination(
             icon: Icon(Icons.history_outlined),
