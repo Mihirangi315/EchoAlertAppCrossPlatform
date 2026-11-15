@@ -1,6 +1,7 @@
 import 'dart:async';
-import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
+
 import '../models/detection_result.dart';
 import 'yamnet_classifier.dart';
 import 'audio_service.dart';
@@ -25,7 +26,8 @@ class SoundClassificationEngine extends ChangeNotifier {
 
   /// Recent detections log for UI display
   final List<DetectionResult> _recentDetections = [];
-  List<DetectionResult> get recentDetections => List.unmodifiable(_recentDetections);
+  List<DetectionResult> get recentDetections =>
+      List.unmodifiable(_recentDetections);
 
   /// Current live detection state for Member A's Live Detection View
   DetectionResult? _latestDetection;
@@ -35,9 +37,9 @@ class SoundClassificationEngine extends ChangeNotifier {
   /// DSP-based confidence scores from yamnet_classifier_web.dart.
   /// These can be updated dynamically from the Settings screen.
   final Map<String, double> _sensitivityThresholds = {
-    'Doorbell':      0.63,
-    'Smoke Alarm':   0.65,
-    'Baby Crying':   0.62,
+    'Doorbell': 0.63,
+    'Smoke Alarm': 0.65,
+    'Baby Crying': 0.62,
     'Phone Ringing': 0.63,
     'Door Knocking': 0.60,
   };
@@ -64,7 +66,9 @@ class SoundClassificationEngine extends ChangeNotifier {
 
     final initialized = await initialize();
     if (!initialized) {
-      debugPrint('SoundClassificationEngine: Failed to initialize YamnetClassifier');
+      debugPrint(
+        'SoundClassificationEngine: Failed to initialize YamnetClassifier',
+      );
       return;
     }
 
@@ -130,8 +134,13 @@ class SoundClassificationEngine extends ChangeNotifier {
     }
   }
 
-  void _handleDetectionTriggered(DetectionResult detection, int inferenceTimeMs) {
-    debugPrint('🎉 Sound Detected! ${detection.category} (${(detection.confidence * 100).toStringAsFixed(1)}%) in ${inferenceTimeMs}ms');
+  void _handleDetectionTriggered(
+    DetectionResult detection,
+    int inferenceTimeMs,
+  ) {
+    debugPrint(
+      '🎉 Sound Detected! ${detection.category} (${(detection.confidence * 100).toStringAsFixed(1)}%) in ${inferenceTimeMs}ms',
+    );
 
     _latestDetection = detection;
     _recentDetections.insert(0, detection);
@@ -148,14 +157,18 @@ class SoundClassificationEngine extends ChangeNotifier {
   void updateSensitivity(String category, double threshold) {
     _sensitivityThresholds[category] = threshold.clamp(0.50, 0.95);
     notifyListeners();
-    debugPrint('SoundClassificationEngine: Updated $category sensitivity threshold to ${threshold.toStringAsFixed(2)}');
+    debugPrint(
+      'SoundClassificationEngine: Updated $category sensitivity threshold to ${threshold.toStringAsFixed(2)}',
+    );
   }
 
   /// Dynamic toggle of target category monitoring state
   void toggleCategory(String category, bool isEnabled) {
     _enabledCategories[category] = isEnabled;
     notifyListeners();
-    debugPrint('SoundClassificationEngine: Toggled $category monitoring to $isEnabled');
+    debugPrint(
+      'SoundClassificationEngine: Toggled $category monitoring to $isEnabled',
+    );
   }
 
   /// Get current sensitivity threshold for a category

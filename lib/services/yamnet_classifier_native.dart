@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
@@ -16,7 +17,8 @@ class ClassificationCandidate {
   });
 
   @override
-  String toString() => '$category ($label): ${(confidence * 100).toStringAsFixed(1)}%';
+  String toString() =>
+      '$category ($label): ${(confidence * 100).toStringAsFixed(1)}%';
 }
 
 /// Member C: Native YAMNet TFLite Model Classifier (Android / iOS / Desktop)
@@ -33,9 +35,27 @@ class YamnetClassifier {
 
   static final Map<String, List<String>> targetCategoryMappings = {
     'Doorbell': ['doorbell', 'ding-dong', 'chime', 'bell'],
-    'Smoke Alarm': ['smoke detector, smoke alarm', 'fire alarm', 'siren', 'alarm', 'civil defense siren', 'alarm clock', 'buzzer'],
-    'Baby Crying': ['crying, sobbing', 'baby cry, infant cry', 'tears', 'baby laughter'],
-    'Phone Ringing': ['telephone', 'ringtone', 'cell phone', 'telephone bell ringing'],
+    'Smoke Alarm': [
+      'smoke detector, smoke alarm',
+      'fire alarm',
+      'siren',
+      'alarm',
+      'civil defense siren',
+      'alarm clock',
+      'buzzer',
+    ],
+    'Baby Crying': [
+      'crying, sobbing',
+      'baby cry, infant cry',
+      'tears',
+      'baby laughter',
+    ],
+    'Phone Ringing': [
+      'telephone',
+      'ringtone',
+      'cell phone',
+      'telephone bell ringing',
+    ],
     'Door Knocking': ['knock', 'tap', 'door'],
   };
 
@@ -56,9 +76,14 @@ class YamnetClassifier {
 
       try {
         final options = InterpreterOptions()..threads = 2;
-        _interpreter = await Interpreter.fromAsset(modelAssetPath, options: options);
+        _interpreter = await Interpreter.fromAsset(
+          modelAssetPath,
+          options: options,
+        );
       } catch (e) {
-        debugPrint('YamnetClassifier: TFLite model asset not found or platform unsupported ($e).');
+        debugPrint(
+          'YamnetClassifier: TFLite model asset not found or platform unsupported ($e).',
+        );
       }
 
       _isInitialized = true;
@@ -77,7 +102,8 @@ class YamnetClassifier {
         final category = entry.key;
         final keywords = entry.value;
         for (var kw in keywords) {
-          if (labelLower == kw.toLowerCase() || labelLower.contains(kw.toLowerCase())) {
+          if (labelLower == kw.toLowerCase() ||
+              labelLower.contains(kw.toLowerCase())) {
             _labelIndexToCategory[i] = category;
             break;
           }
@@ -86,7 +112,9 @@ class YamnetClassifier {
     }
   }
 
-  Future<List<ClassificationCandidate>> classifyAudioBuffer(Float32List audioBuffer) async {
+  Future<List<ClassificationCandidate>> classifyAudioBuffer(
+    Float32List audioBuffer,
+  ) async {
     if (!_isInitialized) {
       await initialize();
     }
@@ -94,7 +122,10 @@ class YamnetClassifier {
     final stopwatch = Stopwatch()..start();
     List<ClassificationCandidate> candidates = [];
 
-    final Float32List processedInput = _padOrTruncateBuffer(audioBuffer, expectedSampleCount);
+    final Float32List processedInput = _padOrTruncateBuffer(
+      audioBuffer,
+      expectedSampleCount,
+    );
 
     if (_interpreter != null) {
       try {
@@ -110,11 +141,13 @@ class YamnetClassifier {
           if (_labelIndexToCategory.containsKey(i)) {
             final category = _labelIndexToCategory[i]!;
             final label = i < _labels.length ? _labels[i] : 'Unknown';
-            candidates.add(ClassificationCandidate(
-              label: label,
-              category: category,
-              confidence: score,
-            ));
+            candidates.add(
+              ClassificationCandidate(
+                label: label,
+                category: category,
+                confidence: score,
+              ),
+            );
           }
         }
       } catch (e) {

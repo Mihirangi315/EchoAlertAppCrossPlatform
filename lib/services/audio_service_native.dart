@@ -1,6 +1,8 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+
 import 'permission_manager.dart';
 
 /// Member B: Native Audio Service for Android / iOS / Desktop
@@ -9,10 +11,12 @@ class AudioService extends ChangeNotifier {
   factory AudioService() => _instance;
   AudioService._internal();
 
-  static const MethodChannel _controlChannel =
-      MethodChannel('com.example.echo_alert/audio_control');
-  static const EventChannel _streamChannel =
-      EventChannel('com.example.echo_alert/audio_stream');
+  static const MethodChannel _controlChannel = MethodChannel(
+    'com.example.echo_alert/audio_control',
+  );
+  static const EventChannel _streamChannel = EventChannel(
+    'com.example.echo_alert/audio_stream',
+  );
 
   bool _isListening = false;
   bool get isListening => _isListening;

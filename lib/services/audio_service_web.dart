@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'dart:async';
 import 'dart:js_interop';
+
 import 'package:flutter/foundation.dart';
 import 'package:web/web.dart' as web;
 
@@ -48,8 +49,7 @@ class AudioService extends ChangeNotifier {
       // 3. Wire: MediaStream → ScriptProcessor → destination (captures PCM)
       _sourceNode = _audioContext!.createMediaStreamSource(_mediaStream!);
       // bufferSize=4096, inputChannels=1, outputChannels=1
-      _scriptProcessor =
-          _audioContext!.createScriptProcessor(4096, 1, 1);
+      _scriptProcessor = _audioContext!.createScriptProcessor(4096, 1, 1);
 
       // 4. Intercept PCM frames in the onaudioprocess callback
       _scriptProcessor!.onaudioprocess = (web.AudioProcessingEvent e) {
@@ -64,8 +64,9 @@ class AudioService extends ChangeNotifier {
         for (int i = 0; i < channelData.length; i++) {
           _sampleBuffer.add(channelData[i].toDouble());
           if (_sampleBuffer.length >= chunkSize) {
-            final chunk =
-                Float32List.fromList(_sampleBuffer.sublist(0, chunkSize));
+            final chunk = Float32List.fromList(
+              _sampleBuffer.sublist(0, chunkSize),
+            );
             _sampleBuffer.removeRange(0, chunkSize);
             _audioStreamController.add(chunk);
           }

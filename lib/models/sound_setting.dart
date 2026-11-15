@@ -1,4 +1,3 @@
-
 // C ගේ engine එකේ tuned thresholds වලට ගැලපෙන default values
 const Map<String, double> kDefaultSounds = {
   'Doorbell': 0.63,
@@ -6,7 +5,6 @@ const Map<String, double> kDefaultSounds = {
   'Baby crying': 0.62,
   'Phone ringing': 0.63,
   'Door knocking': 0.60,
-
 };
 
 class SoundSetting {
@@ -21,14 +19,14 @@ class SoundSetting {
   });
 
   Map<String, dynamic> toMap() => {
-        'soundLabel': soundLabel,
-        'isEnabled': isEnabled ? 1 : 0,
-        'sensitivity': sensitivity,
-      };
+    'soundLabel': soundLabel,
+    'isEnabled': isEnabled ? 1 : 0,
+    'sensitivity': sensitivity,
+  };
 
   factory SoundSetting.fromMap(Map<String, dynamic> map) => SoundSetting(
-        soundLabel: map['soundLabel'] as String,
-        isEnabled: (map['isEnabled'] as int) == 1,
-        sensitivity: (map['sensitivity'] as num).toDouble(),
-      );
+    soundLabel: map['soundLabel'] as String,
+    isEnabled: (map['isEnabled'] as int) == 1,
+    sensitivity: (map['sensitivity'] as num).toDouble(),
+  );
 }
