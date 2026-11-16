@@ -33,7 +33,7 @@ class AppDatabase {
             sensitivity REAL NOT NULL
           )
         ''');
-        // මුලින්ම database එක හැදෙද්දී sound 5ම default settings එක්ක දානවා
+        
         for (final entry in kDefaultSounds.entries) {
           await db.insert(
             'SoundSetting',
