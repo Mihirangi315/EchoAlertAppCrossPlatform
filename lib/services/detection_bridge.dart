@@ -7,12 +7,12 @@ import '../models/detection_result.dart';
 import 'alert_manager.dart';
 import 'sound_classification_engine.dart';
 
-/// Member C ගේ detection stream එක Member D ගේ AlertManager එකට සම්බන්ධ කරනවා.
+
 class DetectionBridge {
   DetectionBridge._();
   static final DetectionBridge instance = DetectionBridge._();
 
-  // Database label -> C ගේ engine එකේ category නම
+  
   static const Map<String, String> _engineCategory = {
     'Doorbell': 'Doorbell',
     'Smoke / Fire Alarm': 'Smoke Alarm',
@@ -24,7 +24,7 @@ class DetectionBridge {
   StreamSubscription<DetectionResult>? _subscription;
 
   Future<void> start() async {
-    // Web එකේ database නැහැ
+    
     if (kIsWeb) return;
     await syncSettings();
     _subscription ??= SoundClassificationEngine().detectionStream.listen(
@@ -39,8 +39,7 @@ class DetectionBridge {
     );
   }
 
-  /// Database settings (enable/sensitivity) engine එකට යවනවා.
-  /// Settings screen එකෙන් වෙනසක් කළාම මේක ආයෙ call කරන්න.
+  
   Future<void> syncSettings() async {
     if (kIsWeb) return;
     final engine = SoundClassificationEngine();
