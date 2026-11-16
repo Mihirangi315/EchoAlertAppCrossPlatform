@@ -1,5 +1,5 @@
 
-// C ගේ engine එකේ tuned thresholds වලට ගැලපෙන default values
+
 const Map<String, double> kDefaultSounds = {
   'Doorbell': 0.63,
   'Smoke / Fire Alarm': 0.65,
