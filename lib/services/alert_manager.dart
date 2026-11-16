@@ -11,7 +11,7 @@ class AlertManager {
   AlertManager._();
   static final AlertManager instance = AlertManager._();
 
-  /// MaterialApp එකට මේක දෙන්න ඕන (Alert Overlay එක පෙන්වන්න)
+  
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
 
@@ -26,10 +26,10 @@ class AlertManager {
     'Sound Alerts',
     description: 'Alerts when an important sound is detected',
     importance: Importance.max,
-    enableVibration: false, // vibration එක අපි වෙනම කරනවා
+    enableVibration: false, 
   );
 
-  // [රැඳී ඉන්න ms, vibrate ms, රැඳී ඉන්න ms, vibrate ms, ...]
+  
   static const Map<String, List<int>> _patterns = {
     'doorbell': [0, 400, 200, 400],
     'smoke / fire alarm': [0, 800, 200, 800, 200, 800],
@@ -38,7 +38,7 @@ class AlertManager {
     'door knocking': [0, 150, 100, 150, 100, 150],
   };
 
-  /// "Smoke Alarm" වගේ වෙනස් නම් ආවත් එකම sound එකක් විදියට හඳුනාගන්නවා
+  
   String _normalize(String label) {
     final l = label.toLowerCase();
     if (l.contains('smoke') || l.contains('fire')) return 'smoke / fire alarm';
@@ -46,7 +46,7 @@ class AlertManager {
   }
 
   Future<void> init() async {
-    // Web එකේ database/notification/vibration නැහැ
+    
     if (_initialized || kIsWeb) return;
     await _plugin.initialize(
       settings: const InitializationSettings(
@@ -61,7 +61,7 @@ class AlertManager {
     _initialized = true;
   }
 
-  /// Member C ගේ detection එකෙන් මේක call කරන්න ඕන
+  
   Future<void> handleDetection(String label, double confidence) async {
     if (kIsWeb) return;
 
@@ -90,7 +90,7 @@ class AlertManager {
     ));
   }
 
-  /// Settings screen එකේ "Test" button වලට (database/cooldown නැතුව)
+  
   Future<void> showTestAlert(String label) async {
     if (kIsWeb) return;
     await _fireAlert(label, 0.99);
@@ -144,7 +144,7 @@ class AlertManager {
           AlertOverlay(detectedSound: label, confidence: confidence),
     ).then((_) {
       _overlayOpen = false;
-      Vibration.cancel(); // Dismiss කළාම vibration නවතිනවා
+      Vibration.cancel(); 
     });
   }
 
