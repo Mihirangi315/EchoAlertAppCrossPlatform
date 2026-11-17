@@ -50,7 +50,6 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<void> _loadStats() async {
-    if (kIsWeb) return;
     try {
       final events = await AppDatabase.instance.getEvents();
       final now = DateTime.now();
@@ -175,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Quick Stats Row (Member A requirement)
+              // Quick Stats Row
               Row(
                 children: [
                   Expanded(
@@ -202,28 +201,24 @@ class _HomeScreenState extends State<HomeScreen>
 
               const SizedBox(height: 36),
 
-              // Status text
-              Text(
-                _isListening
-                    ? 'EchoAlert is Actively Listening'
-                    : 'Listening is Stopped',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: _isListening
-                      ? theme.colorScheme.primary
-                      : Colors.grey.shade600,
+              // Status text when listening is active
+              if (_isListening) ...[
+                Text(
+                  'EchoAlert is Actively Listening',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _isListening
-                    ? 'Monitoring ambient audio for safety & critical sounds'
-                    : 'Tap the button below to start background listening',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                const SizedBox(height: 8),
+                Text(
+                  'Monitoring ambient audio for safety & critical sounds',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
+              ],
 
               if (_lastDetectedEvent != null) ...[
                 const SizedBox(height: 16),
@@ -266,16 +261,54 @@ class _HomeScreenState extends State<HomeScreen>
                               ),
                           ],
                         ),
-                        child: Icon(
-                          _isListening ? Icons.hearing : Icons.mic_off,
-                          size: 78,
-                          color: _isListening
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurfaceVariant,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _isListening ? Icons.hearing : Icons.mic_off,
+                              size: 64,
+                              color: _isListening
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              _isListening ? 'STOP' : 'START',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                                color: _isListening
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );
                   },
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Explicit Start / Stop Labeled Button
+              FilledButton.icon(
+                onPressed: _toggleListening,
+                icon: Icon(_isListening ? Icons.stop : Icons.play_arrow),
+                label: Text(
+                  _isListening ? 'STOP LISTENING' : 'START LISTENING',
+                  style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _isListening
+                      ? theme.colorScheme.error
+                      : theme.colorScheme.primary,
+                  foregroundColor: _isListening
+                      ? theme.colorScheme.onError
+                      : theme.colorScheme.onPrimary,
+                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
                 ),
               ),
 

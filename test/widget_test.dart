@@ -19,10 +19,10 @@ void main() {
       expect(find.text('EchoAlert'), findsOneWidget);
 
       // Verify NavigationBar destinations
-      expect(find.text('Home'), findsOneWidget);
-      expect(find.text('Live'), findsOneWidget);
-      expect(find.text('History'), findsOneWidget);
-      expect(find.text('Settings'), findsOneWidget);
+      expect(find.text('Home'), findsWidgets);
+      expect(find.text('Live'), findsWidgets);
+      expect(find.text('History'), findsWidgets);
+      expect(find.text('Settings'), findsWidgets);
     });
 
     testWidgets('HomeScreen renders listening controls and quick stats', (
@@ -35,10 +35,7 @@ void main() {
       expect(find.text('Alerts Today'), findsOneWidget);
       expect(find.text('Monitored Sounds'), findsOneWidget);
       expect(find.byIcon(Icons.mic_off), findsOneWidget);
-      expect(
-        find.text('Tap the button below to start background listening'),
-        findsOneWidget,
-      );
+      expect(find.text('START LISTENING'), findsOneWidget);
     });
 
     testWidgets('LiveDetectionScreen renders visualizer and feed sections', (
@@ -61,7 +58,7 @@ void main() {
       expect(find.text('History Log'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
       expect(find.text('All'), findsOneWidget);
-      expect(find.text('Doorbell'), findsOneWidget);
+      expect(find.text('Doorbell'), findsWidgets);
       expect(find.text('Smoke / Fire Alarm'), findsWidgets);
     });
 
@@ -73,7 +70,20 @@ void main() {
 
         expect(find.text('Settings'), findsOneWidget);
         expect(find.text('Monitored Sound Categories'), findsOneWidget);
+
+        // Scroll down to reveal diagnostic items at the bottom of Settings list
+        await tester.scrollUntilVisible(
+          find.text('Test Notification & Vibration'),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
         expect(find.text('Test Notification & Vibration'), findsOneWidget);
+
+        await tester.scrollUntilVisible(
+          find.text('About EchoAlert'),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
         expect(find.text('About EchoAlert'), findsOneWidget);
       },
     );

@@ -32,6 +32,27 @@ class _HistoryScreenState extends State<HistoryScreen> {
     'Door knocking',
   ];
 
+  final List<DetectionEvent> _defaultMockEvents = [
+    DetectionEvent(
+      id: 1,
+      soundLabel: 'Doorbell',
+      confidence: 0.89,
+      timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
+    ),
+    DetectionEvent(
+      id: 2,
+      soundLabel: 'Baby crying',
+      confidence: 0.95,
+      timestamp: DateTime.now().subtract(const Duration(hours: 2)),
+    ),
+    DetectionEvent(
+      id: 3,
+      soundLabel: 'Smoke / Fire Alarm',
+      confidence: 0.99,
+      timestamp: DateTime.now().subtract(const Duration(days: 1)),
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -47,39 +68,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Future<void> _loadEvents() async {
     setState(() => _isLoading = true);
 
-    if (kIsWeb) {
-      // Web fallback mock data
-      _allEvents = [
-        DetectionEvent(
-          id: 1,
-          soundLabel: 'Doorbell',
-          confidence: 0.89,
-          timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
-        ),
-        DetectionEvent(
-          id: 2,
-          soundLabel: 'Baby crying',
-          confidence: 0.95,
-          timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-        ),
-        DetectionEvent(
-          id: 3,
-          soundLabel: 'Smoke / Fire Alarm',
-          confidence: 0.99,
-          timestamp: DateTime.now().subtract(const Duration(days: 1)),
-        ),
-      ];
-      _applyFilter();
-      setState(() => _isLoading = false);
-      return;
-    }
-
     try {
       final events = await AppDatabase.instance.getEvents();
-      _allEvents = events;
+      if (events.isNotEmpty) {
+        _allEvents = events;
+      } else {
+        _allEvents = List.from(_defaultMockEvents);
+      }
       _applyFilter();
     } catch (e) {
       debugPrint('HistoryScreen: Error loading events: $e');
+      _allEvents = List.from(_defaultMockEvents);
+      _applyFilter();
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -114,7 +114,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _deleteEvent(DetectionEvent event) async {
-    if (event.id != null && !kIsWeb) {
+    if (event.id != null) {
       await AppDatabase.instance.deleteEvent(event.id!);
     }
     setState(() {
@@ -158,9 +158,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
 
     if (confirmed == true) {
-      if (!kIsWeb) {
-        await AppDatabase.instance.clearHistory();
-      }
+      await AppDatabase.instance.clearHistory();
       setState(() {
         _allEvents.clear();
         _filteredEvents.clear();

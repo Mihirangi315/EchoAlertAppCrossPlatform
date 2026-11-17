@@ -31,15 +31,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadSettings() async {
     setState(() => _isLoading = true);
 
-    if (kIsWeb) {
-      // In web mode, load from defaults
-      _settings = kDefaultSounds.entries
-          .map((e) => SoundSetting(soundLabel: e.key, sensitivity: e.value))
-          .toList();
-      setState(() => _isLoading = false);
-      return;
-    }
-
     try {
       final dbSettings = await AppDatabase.instance.getSettings();
       if (dbSettings.isNotEmpty) {
@@ -66,10 +57,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setting.isEnabled = value;
     });
 
-    if (!kIsWeb) {
-      await AppDatabase.instance.updateSetting(setting);
-      await DetectionBridge.instance.syncSettings();
-    }
+    await AppDatabase.instance.updateSetting(setting);
+    await DetectionBridge.instance.syncSettings();
   }
 
   Future<void> _onSensitivityChanged(SoundSetting setting, double value) async {
@@ -77,10 +66,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setting.sensitivity = double.parse(value.toStringAsFixed(2));
     });
 
-    if (!kIsWeb) {
-      await AppDatabase.instance.updateSetting(setting);
-      await DetectionBridge.instance.syncSettings();
-    }
+    await AppDatabase.instance.updateSetting(setting);
+    await DetectionBridge.instance.syncSettings();
   }
 
   IconData _getIconForSound(String label) {

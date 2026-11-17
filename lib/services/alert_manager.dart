@@ -65,8 +65,6 @@ class AlertManager {
 
   /// Member C ගේ detection එකෙන් මේක call කරන්න ඕන
   Future<void> handleDetection(String label, double confidence) async {
-    if (kIsWeb) return;
-
     final settings = await AppDatabase.instance.getSettings();
     final matches = settings.where(
       (s) => _normalize(s.soundLabel) == _normalize(label),
@@ -97,7 +95,6 @@ class AlertManager {
 
   /// Settings screen එකේ "Test" button වලට (database/cooldown නැතුව)
   Future<void> showTestAlert(String label) async {
-    if (kIsWeb) return;
     await _fireAlert(label, 0.99);
   }
 
@@ -108,34 +105,40 @@ class AlertManager {
   }
 
   Future<void> _vibrate(String label) async {
-    if (await Vibration.hasVibrator() == true) {
-      Vibration.vibrate(
-        pattern: _patterns[_normalize(label)] ?? [0, 500, 200, 500],
-      );
-    }
+    if (kIsWeb) return;
+    try {
+      if (await Vibration.hasVibrator() == true) {
+        Vibration.vibrate(
+          pattern: _patterns[_normalize(label)] ?? [0, 500, 200, 500],
+        );
+      }
+    } catch (_) {}
   }
 
   Future<void> _showNotification(String label, double confidence) async {
-    const details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        'echoalert_alerts',
-        'Sound Alerts',
-        channelDescription: 'Alerts when an important sound is detected',
-        importance: Importance.max,
-        priority: Priority.high,
-        category: AndroidNotificationCategory.alarm,
-        fullScreenIntent: true,
-        enableVibration: false,
-        visibility: NotificationVisibility.public,
-      ),
-    );
-    await _plugin.show(
-      id: label.hashCode & 0x7fffffff,
-      title: '$label detected!',
-      body: 'Confidence ${(confidence * 100).toStringAsFixed(0)}%',
-      notificationDetails: details,
-      payload: '$label|$confidence',
-    );
+    if (kIsWeb) return;
+    try {
+      const details = NotificationDetails(
+        android: AndroidNotificationDetails(
+          'echoalert_alerts',
+          'Sound Alerts',
+          channelDescription: 'Alerts when an important sound is detected',
+          importance: Importance.max,
+          priority: Priority.high,
+          category: AndroidNotificationCategory.alarm,
+          fullScreenIntent: true,
+          enableVibration: false,
+          visibility: NotificationVisibility.public,
+        ),
+      );
+      await _plugin.show(
+        id: label.hashCode & 0x7fffffff,
+        title: '$label detected!',
+        body: 'Confidence ${(confidence * 100).toStringAsFixed(0)}%',
+        notificationDetails: details,
+        payload: '$label|$confidence',
+      );
+    } catch (_) {}
   }
 
   void _showOverlay(String label, double confidence) {
